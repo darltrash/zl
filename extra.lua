@@ -62,6 +62,10 @@ utils.font = setmetatable({
 
 utils.mainFont = utils.font("assets/font.png", "abcdefghijklmnopqrstuvwxyz1234567890")
 
+function utils.lerp(a, b, t) 
+    return a * (1-t) + b * t 
+end
+
 function utils.hex(h, a)
     h = h:gsub("#","")
     return tonumber("0x"..h:sub(1,2))/255, tonumber("0x"..h:sub(3,4))/255, tonumber("0x"..h:sub(5,6))/255, a
@@ -81,15 +85,15 @@ function utils.convertBin(n) -- https://stackoverflow.com/questions/9079853/lua-
     return table.concat(t)
 end
 
-function utils.vec2Union(v) 
+function utils.vec2Union(x, y) 
     -- This converts two i16s into one i32 (number type)
     -- Overflows and underflows safely
-    return bit.bor(bit.lshift(v.x % _16CAPACITY, 16), v.y % _16CAPACITY)
+    return bit.bor(bit.lshift(x % _16CAPACITY, 16), y % _16CAPACITY)
 end
 
 function utils.union2Vec(u) 
     -- This converts one i32 (number type) into two i16s
-    return {x = bit.rshift(u, 16), y = bit.band(u, _16CAPACITY)}
+    return bit.rshift(u, 16), bit.band(u, _16CAPACITY)
 end
 
 return utils
