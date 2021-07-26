@@ -36,6 +36,8 @@ _TILEHEIGHT = 16
 _GAMESCALE = 3
 _16CAPACITY = (2^16)-1
 
+_TABSIZE = 4
+
 love.window.setMode(_CHUNKWIDTH*_TILEWIDTH*_GAMESCALE, _CHUNKHEIGHT*_TILEHEIGHT*_GAMESCALE)
 
 local world = require 'world'

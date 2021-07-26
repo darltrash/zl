@@ -15,19 +15,19 @@ return {
             id = id,
             actors = {},
             tiles = {},
-            collisionMap = {},
+            grids = {
+                collision = {}
+            }
         }
 
-        local _cache = {}
-        for x = 1, 40 do
-            local r = 0
-            repeat
-                r = extra.vec2Union({ x = love.math.random(0, _CHUNKWIDTH), y = love.math.random(0, _CHUNKHEIGHT) })
-            until not _cache[r]
-            c.collisionMap[r] = true
-            table.insert(c.tiles, {
-                p = r, t = extra.vec2Union({ x = love.math.random(0, 10), y = love.math.random(0, 4) })
-            })
+        local floor = extra.vec2Union { x = 5, y = 1 }
+        for x = 0, _CHUNKWIDTH do
+            for y = 0, _CHUNKHEIGHT do
+                table.insert(c.tiles, {
+                    p = extra.vec2Union { x = x, y = y },
+                    t = floor
+                })
+            end
         end
 
         c.prerender = self:renderTiles(c)
@@ -58,7 +58,7 @@ return {
     end,
 
     process = function(self, delta)
-        if love.keyboard.isDown("g") or not self.curChunk then
+        if not self.curChunk then
             -- We'll assume this is a new world
             local chunk = self:generateChunk(0)
 
@@ -76,14 +76,16 @@ return {
     end,
 
     draw = function(self)
-        love.graphics.draw(self.curChunk.prerender, 0, 0, 0, _GAMESCALE)
+        love.graphics.setColor(1, 1, 1, 1)
+        love.graphics.scale(_GAMESCALE)
 
+        love.graphics.draw(self.curChunk.prerender, 0, 0, 0)
+        
+        love.graphics.setColor(extra.hex("2c1e74"))
         local mx, my = love.mouse.getPosition()
-        if self.curChunk.collisionMap[extra.vec2Union({
+        if self.curChunk.grids.collision[extra.vec2Union {
             x = math.floor(math.floor(mx/_GAMESCALE)/_TILEWIDTH),
             y = math.floor(math.floor(my/_GAMESCALE)/_TILEHEIGHT),
-        })] then love.graphics.print("TOUCHING", 3, 16) end
-
-        love.graphics.print(love.timer.getFPS(), 3, 3)
+        }] then extra.mainFont:print("TOUCHING", 2, 1) end
     end
 }
