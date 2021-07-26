@@ -60,7 +60,7 @@ utils.font = setmetatable({
     end
 }, { __call = function(self, ...) return self:init(...) end })
 
-utils.mainFont = utils.font("assets/font.png", "abcdefghijklmnopqrstuvwxyz")
+utils.mainFont = utils.font("assets/font.png", "abcdefghijklmnopqrstuvwxyz1234567890")
 
 function utils.hex(h, a)
     h = h:gsub("#","")

@@ -28,12 +28,12 @@ freely, subject to the following restrictions:
 
 love.graphics.setDefaultFilter("nearest", "nearest")
 
-_CHUNKWIDTH = 16
-_CHUNKHEIGHT = 10
+_CHUNKWIDTH = 18
+_CHUNKHEIGHT = 12
 _TILEWIDTH = 16
 _TILEHEIGHT = 16
 
-_GAMESCALE = 3
+_GAMESCALE = 2
 _16CAPACITY = (2^16)-1
 
 _TABSIZE = 4

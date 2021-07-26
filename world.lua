@@ -86,6 +86,15 @@ return {
         if self.curChunk.grids.collision[extra.vec2Union {
             x = math.floor(math.floor(mx/_GAMESCALE)/_TILEWIDTH),
             y = math.floor(math.floor(my/_GAMESCALE)/_TILEHEIGHT),
-        }] then extra.mainFont:print("TOUCHING", 2, 1) end
+        }] then extra.mainFont:print("touching", 2, 1) end
+
+        local pos = extra.union2Vec(self.curChunkID) 
+        local str = "chunk x"..pos.x.." y"..pos.y
+
+        love.graphics.setColor(extra.hex("D58863"))
+        extra.mainFont:print(str, 3, 2)
+
+        love.graphics.setColor(extra.hex("2c1e74"))
+        extra.mainFont:print(str, 2, 1)
     end
 }
