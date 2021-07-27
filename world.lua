@@ -10,12 +10,14 @@ return {
     chunks = {},
     chunkrefs = {},
 
+    animDirection = { x = 0, y = 0, p = 0, active = false },
+
     systems = require("systems"),
 
     generateChunk = function(self, id)
         local c = {
             id = id,
-            actors = { {s=999, x = 3, y = 3} },
+            actors = {},
             tiles = {},
             grids = {
                 collision = {}
@@ -23,42 +25,62 @@ return {
         }
 
         local floor = extra.vec2Union(5, 1)
-        local collider = extra.vec2Union(1, 1)
+        local collider = extra.vec2Union(3, 3)
         for x = 0, _CHUNKWIDTH do
             for y = 0, _CHUNKHEIGHT do
                 local t = {
-                    p = extra.vec2Union(x, y)
+                    p = extra.vec2Union(x, y),
+                    t = floor
                 }
 
-                if love.math.random(1, 5)==5 then
+                if (x==0 or y==0 or x==_CHUNKWIDTH-1 or y==_CHUNKHEIGHT-1) and not ((x>3 and x<_CHUNKWIDTH-4) or (y>3 and y<_CHUNKHEIGHT-4)) then
                     c.grids.collision[t.p] = true
                     t.t = collider
-                else
-                    t.t = floor
                 end
                 table.insert(c.tiles, t)
             end
         end
+        return c
+    end,
 
-        
-        for x = 1, 30 do
-            local p = extra.vec2Union(love.math.random(0, _CHUNKWIDTH), love.math.random(0, _CHUNKWIDTH))
-            c.grids.collision[p] = true
-            table.insert(c.tiles, {
-                p = p,
-                t = floor
-            })
+    transport = function(self, x, y, actor) -- Only supports going to near chunks rn
+        self.nextChunkID = extra.vec2Union(x, y)
+        if not self.chunks[self.nextChunkID] then 
+            self.chunks[self.nextChunkID] = self:generateChunk(self.nextChunkID)
+        end
+        self.nextChunk = self.chunks[self.nextChunkID]
+        self.nextChunk.prerender = self:renderTiles(self.nextChunk)
+
+        if actor then
+            local newGen = {}
+            for _, _actor in ipairs(self.curChunk.actors) do
+                if not (_actor.die or _actor==actor) then 
+                    table.insert(newGen, _actor) 
+                end
+            end
+            self.curChunk.actors = newGen
+
+            actor.x = actor.x % _CHUNKWIDTH
+            actor.y = actor.y % _CHUNKHEIGHT
+
+            actor._x = actor.x*_TILEWIDTH
+            actor._y = actor.y*_TILEHEIGHT
+
+            table.insert(self.nextChunk.actors, actor)
         end
 
-        c.prerender = self:renderTiles(c)
-        return c
+        local _x, _y = extra.union2Vec(self.curChunkID)
+        self.animDirection = {x=x-_x, y=y-_y, p = 100, active=true }
     end,
 
     renderTiles = function(self, chunk)
         local canvas = love.graphics.newCanvas(_CHUNKWIDTH*_TILEWIDTH, _CHUNKHEIGHT*_TILEHEIGHT)
         canvas:setFilter("nearest", "nearest")
 
+        love.graphics.reset()
         love.graphics.setCanvas(canvas)
+            
+            love.graphics.setColor(1, 1, 1, 1)
             love.graphics.clear(0, 0, 0, 0)
 
             local w, h = self.tileset:getWidth(), self.tileset:getHeight()
@@ -72,12 +94,11 @@ return {
 
                 love.graphics.draw(self.tileset, self._tilesetCache[tile.t], x*_TILEWIDTH, y*_TILEHEIGHT)
 
-                if chunk.grids.collision[tile.p] then 
+                if chunk.grids.collision[tile.p] and false then 
                     love.graphics.setColor(0, 0, 1, 1)
                     love.graphics.draw(self.tileset, self._tilesetCache[tile.t], x*_TILEWIDTH, y*_TILEHEIGHT)
                     love.graphics.setColor(1, 1, 1, 1)
-                end
-                    
+                end 
             end
         love.graphics.setCanvas()
 
@@ -92,19 +113,31 @@ return {
             table.insert(self.chunkrefs, chunk)
             self.chunks[0] = chunk
             self.curChunk = chunk
+            table.insert(self.curChunk.actors, {s=999, x = 3, y = 3})
 
             self.curChunkID = 0
         end
 
+        self.animDirection.p = extra.lerp(self.animDirection.p, 0, delta*18)
+        if self.animDirection.active and self.animDirection.p<0.2 then 
+            self.animDirection.active = false 
+            self.curChunk.prerender = nil
+            self.curChunk = self.nextChunk
+            self.curChunkID = self.nextChunkID
+        end
+
+        if self.animDirection.active then return end
         local newGen = {}
         for _, actor in ipairs(self.curChunk.actors) do
-            if not actor.die then table.insert(newGen, actor) end
-
-            actor._x = extra.lerp(actor._x or actor.x*_TILEWIDTH, actor.x*_TILEWIDTH, delta*16) 
-            actor._y = extra.lerp(actor._y or actor.y*_TILEWIDTH, actor.y*_TILEWIDTH, delta*16)
-            actor._moving = math.abs(actor._x - (actor.x*_TILEWIDTH))>0.3 or math.abs(actor._y - (actor.y*_TILEWIDTH))>0.3
+            actor._x = extra.lerp(actor._x or actor.x*_TILEWIDTH, actor.x*_TILEWIDTH, delta*16)
+            actor._y = extra.lerp(actor._y or actor.y*_TILEHEIGHT, actor.y*_TILEHEIGHT, delta*16)
+            actor._moving = math.abs(actor._x - (actor.x*_TILEWIDTH))>0.3 or math.abs(actor._y - (actor.y*_TILEHEIGHT))>0.3
 
             self.systems[actor.s](actor, delta, self.curChunk, self)
+
+            if not actor.die then 
+                table.insert(newGen, actor) 
+            end
         end
         self.curChunk.actors = newGen
     end,
@@ -113,15 +146,26 @@ return {
         love.graphics.setColor(1, 1, 1, 1)
         love.graphics.scale(_GAMESCALE)
 
-        love.graphics.draw(self.curChunk.prerender, 0, 0, 0)
+        if not self.curChunk.prerender then 
+            self.curChunk.prerender = self:renderTiles(self.curChunk)
+        end
         
-        love.graphics.setColor(extra.hex("2c1e74"))
+        local _a = self.animDirection.p/100
+        local _offsetX = _CHUNKWIDTH*_TILEWIDTH*self.animDirection.x
+        local _offsetY = _CHUNKHEIGHT*_TILEHEIGHT*self.animDirection.y
+
+        love.graphics.draw(self.curChunk.prerender, _offsetX*_a, _offsetY*_a)
+        if self.nextChunk then
+            love.graphics.draw(self.nextChunk.prerender, _offsetX*(1-_a), _offsetY*_a)
+        end
+        
+        --[[love.graphics.setColor(extra.hex("2c1e74"))
         local mx, my = love.mouse.getPosition()
         if self.curChunk.grids.collision[extra.vec2Union(
             math.floor(math.floor(mx/_GAMESCALE)/_TILEWIDTH), 
             math.floor(math.floor(my/_GAMESCALE)/_TILEHEIGHT) )] then 
                 extra.mainFont:print("touching", 2, 1) 
-        end
+        end]]
 
         local posx, posy = extra.union2Vec(self.curChunkID) 
         local str = "chunk x"..posx.." y"..posy
@@ -132,8 +176,9 @@ return {
         love.graphics.setColor(extra.hex("2c1e74"))
         extra.mainFont:print(str, 2, 1)
 
+        if self.animDirection.active then return end
         for _, actor in ipairs(self.curChunk.actors) do
-            love.graphics.rectangle("fill", actor._x, actor._y, _TILEWIDTH, _TILEHEIGHT) 
+            love.graphics.rectangle("fill", actor._x, actor._y - (_TILEHEIGHT/2), _TILEWIDTH, _TILEHEIGHT) 
         end
     end
 }

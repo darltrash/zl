@@ -3,6 +3,7 @@ local ex = require "extra"
 
 return {
     [999] = function(actor, delta, chunk, world) -- DEBUG PLAYER
+        actor.id = "PLAYERDEBUG"
         local cols = chunk.grids.collision
 
         if not actor._moving then
@@ -27,6 +28,23 @@ return {
             if not cols[ex.vec2Union(_x, actor.y)] then
                 actor.x = _x
             end
+        end
+
+        -- Yeah sorry for this mess, haha
+
+        local _chunkX, _chunkY = ex.union2Vec(world.curChunkID)
+        if actor.x<0 then 
+            world:transport(_chunkX-1, _chunkY, actor)
+        end
+        if actor.x>_CHUNKWIDTH then 
+            world:transport(_chunkX+1, _chunkY, actor)
+        end
+
+        if actor.y<0 then 
+            world:transport(_chunkX, _chunkY-1, actor)
+        end
+        if actor.y>_CHUNKHEIGHT then 
+            world:transport(_chunkX, _chunkY+1, actor)
         end
     end,
 }
