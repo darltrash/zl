@@ -118,7 +118,7 @@ return {
             self.curChunkID = 0
         end
 
-        self.animDirection.p = extra.lerp(self.animDirection.p, 0, delta*18)
+        self.animDirection.p = extra.lerp(self.animDirection.p, 0, delta*10)
         if self.animDirection.active and self.animDirection.p<0.2 then 
             self.animDirection.active = false 
             self.curChunk.prerender = nil
@@ -129,15 +129,29 @@ return {
         if self.animDirection.active then return end
         local newGen = {}
         for _, actor in ipairs(self.curChunk.actors) do
-            actor._x = extra.lerp(actor._x or actor.x*_TILEWIDTH, actor.x*_TILEWIDTH, delta*16)
-            actor._y = extra.lerp(actor._y or actor.y*_TILEHEIGHT, actor.y*_TILEHEIGHT, delta*16)
-            actor._moving = math.abs(actor._x - (actor.x*_TILEWIDTH))>0.3 or math.abs(actor._y - (actor.y*_TILEHEIGHT))>0.3
+            actor.ox = actor.ox or actor.x
+            actor.oy = actor.oy or actor.y
+            actor.v = actor.v or 0
+
+            if actor._moving then
+                actor.v = math.min(1, actor.v + delta * 6)
+                if actor.v == 1 then
+                    actor._moving = false
+                    actor.v = 0
+                    actor.ox = actor.x
+                    actor.oy = actor.y
+                end
+            else
+                actor._moving = actor.ox ~= actor.x or actor.oy ~= actor.y 
+            end
+            
 
             self.systems[actor.s](actor, delta, self.curChunk, self)
 
             if not actor.die then 
                 table.insert(newGen, actor) 
             end
+            actor._movingBefore = actor._moving
         end
         self.curChunk.actors = newGen
     end,
@@ -156,7 +170,7 @@ return {
 
         love.graphics.draw(self.curChunk.prerender, _offsetX*_a, _offsetY*_a)
         if self.nextChunk then
-            love.graphics.draw(self.nextChunk.prerender, _offsetX*(1-_a), _offsetY*_a)
+            love.graphics.draw(self.nextChunk.prerender, _offsetX*(2-_a), _offsetY*(2-_a))
         end
         
         --[[love.graphics.setColor(extra.hex("2c1e74"))
@@ -178,7 +192,9 @@ return {
 
         if self.animDirection.active then return end
         for _, actor in ipairs(self.curChunk.actors) do
-            love.graphics.rectangle("fill", actor._x, actor._y - (_TILEHEIGHT/2), _TILEWIDTH, _TILEHEIGHT) 
+            local _x = actor.ox - (actor.ox - actor.x) * actor.v
+            local _y = actor.oy - (actor.oy - actor.y) * actor.v + 0.5
+            love.graphics.rectangle("fill", math.floor(_x * _TILEWIDTH), math.floor(_y * _TILEHEIGHT), _TILEWIDTH, _TILEHEIGHT) 
         end
     end
 }

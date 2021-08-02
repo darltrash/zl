@@ -66,6 +66,15 @@ function utils.lerp(a, b, t)
     return a * (1-t) + b * t 
 end
 
+function utils.sign(n)
+    return (n > 0 and 1) or (n == 0 and 0) or -1
+end
+
+function utils.normalize(x, y)
+    local length = math.sqrt( (x*x) + (y*y) )
+    return x / length, y / length
+end
+
 function utils.hex(h, a)
     h = h:gsub("#","")
     return tonumber("0x"..h:sub(1,2))/255, tonumber("0x"..h:sub(3,4))/255, tonumber("0x"..h:sub(5,6))/255, a
