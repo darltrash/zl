@@ -4,6 +4,7 @@ local ex = require "extra"
 return {
     [999] = function(actor, delta, chunk, world) -- DEBUG PLAYER
         actor.id = "PLAYERDEBUG"
+        actor.vel = 10
         local cols = chunk.grids.collision
 
         if not actor._moving then
@@ -30,7 +31,7 @@ return {
             end
         end
 
-        -- Yeah sorry for this mess, haha
+        -- CHUNK CAMERA MOVEMENT SYSTEM... THING
 
         local _chunkX, _chunkY = ex.union2Vec(world.curChunkID)
         if actor.x<0 then 

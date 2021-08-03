@@ -14,6 +14,8 @@ return {
 
     systems = require("systems"),
 
+    mainCanvas = love.graphics.newCanvas(_TILEWIDTH*_CHUNKWIDTH, _TILEHEIGHT*_CHUNKHEIGHT),
+
     generateChunk = function(self, id)
         local c = {
             id = id,
@@ -49,6 +51,7 @@ return {
             self.chunks[self.nextChunkID] = self:generateChunk(self.nextChunkID)
         end
         self.nextChunk = self.chunks[self.nextChunkID]
+
         self.nextChunk.prerender = self:renderTiles(self.nextChunk)
 
         if actor then
@@ -62,6 +65,8 @@ return {
 
             actor.x = actor.x % _CHUNKWIDTH
             actor.y = actor.y % _CHUNKHEIGHT
+            actor.ox = actor.x
+            actor.oy = actor.y
 
             actor._x = actor.x*_TILEWIDTH
             actor._y = actor.y*_TILEHEIGHT
@@ -75,13 +80,14 @@ return {
 
     renderTiles = function(self, chunk)
         local canvas = love.graphics.newCanvas(_CHUNKWIDTH*_TILEWIDTH, _CHUNKHEIGHT*_TILEHEIGHT)
-        canvas:setFilter("nearest", "nearest")
 
-        love.graphics.reset()
         love.graphics.setCanvas(canvas)
-            
-            love.graphics.setColor(1, 1, 1, 1)
             love.graphics.clear(0, 0, 0, 0)
+
+            local posx, posy = extra.union2Vec(chunk.id) 
+            local str = "chunk x"..posx.." y"..posy
+
+            love.graphics.setColor(1, 1, 1, 1)
 
             local w, h = self.tileset:getWidth(), self.tileset:getHeight()
             for _, tile in ipairs(chunk.tiles) do
@@ -100,6 +106,9 @@ return {
                     love.graphics.setColor(1, 1, 1, 1)
                 end 
             end
+
+            love.graphics.setColor(extra.hex("000000"))
+            extra.mainFont:print(str, 1, 1)
         love.graphics.setCanvas()
 
         return canvas
@@ -118,12 +127,14 @@ return {
             self.curChunkID = 0
         end
 
-        self.animDirection.p = extra.lerp(self.animDirection.p, 0, delta*10)
+        self.animDirection.p = extra.lerp(self.animDirection.p, 0, delta*6)
         if self.animDirection.active and self.animDirection.p<0.2 then 
             self.animDirection.active = false 
             self.curChunk.prerender = nil
             self.curChunk = self.nextChunk
             self.curChunkID = self.nextChunkID
+            self.nextChunk = nil
+            self.nextChunkID = nil
         end
 
         if self.animDirection.active then return end
@@ -134,7 +145,7 @@ return {
             actor.v = actor.v or 0
 
             if actor._moving then
-                actor.v = math.min(1, actor.v + delta * 6)
+                actor.v = math.min(1, actor.v + delta * (actor.vel or 6))
                 if actor.v == 1 then
                     actor._moving = false
                     actor.v = 0
@@ -145,7 +156,6 @@ return {
                 actor._moving = actor.ox ~= actor.x or actor.oy ~= actor.y 
             end
             
-
             self.systems[actor.s](actor, delta, self.curChunk, self)
 
             if not actor.die then 
@@ -154,47 +164,55 @@ return {
             actor._movingBefore = actor._moving
         end
         self.curChunk.actors = newGen
-    end,
-
-    draw = function(self)
-        love.graphics.setColor(1, 1, 1, 1)
-        love.graphics.scale(_GAMESCALE)
 
         if not self.curChunk.prerender then 
             self.curChunk.prerender = self:renderTiles(self.curChunk)
         end
-        
+    end,
+
+    draw = function(self)
         local _a = self.animDirection.p/100
-        local _offsetX = _CHUNKWIDTH*_TILEWIDTH*self.animDirection.x
-        local _offsetY = _CHUNKHEIGHT*_TILEHEIGHT*self.animDirection.y
+        local _offsetX = _CHUNKWIDTH  * _TILEWIDTH  * self.animDirection.x
+        local _offsetY = _CHUNKHEIGHT * _TILEHEIGHT * self.animDirection.y
 
-        love.graphics.draw(self.curChunk.prerender, _offsetX*_a, _offsetY*_a)
+        love.graphics.setCanvas(self.mainCanvas)
+        love.graphics.clear(0, 0, 0, 0)
+        love.graphics.setColor(1, 1, 1, 1)
+
+        love.graphics.draw(self.curChunk.prerender, 0, 0)
         if self.nextChunk then
-            love.graphics.draw(self.nextChunk.prerender, _offsetX*(2-_a), _offsetY*(2-_a))
+            local f = math.floor
+            love.graphics.draw(self.nextChunk.prerender, f(_offsetX*_a), f(_offsetY*_a))
+
+            -- Animation gradient stuff
+
+            love.graphics.setColor(0, 0, 0, (1-_a)*0.6)
+            local w, h = _CHUNKWIDTH  * _TILEWIDTH, _CHUNKHEIGHT  * _TILEHEIGHT
+
+            love.graphics.setShader(shaders.gradient)
+            shaders.gradient:send("dir", 1)
+            shaders.gradient:send("a", 0)
+            love.graphics.draw(_BLANK, f(_offsetX*_a), f(_offsetY*_a)+h, 0, w, h)
+            shaders.gradient:send("a", 1)
+            love.graphics.draw(_BLANK, f(_offsetX*_a), f(_offsetY*_a)-h, 0, w, h)
+
+            shaders.gradient:send("dir", 0)
+            shaders.gradient:send("a", 0)
+            love.graphics.draw(_BLANK, f(_offsetX*_a)+w, f(_offsetY*_a), 0, w, h)
+            shaders.gradient:send("a", 1)
+            love.graphics.draw(_BLANK, f(_offsetX*_a)-w, f(_offsetY*_a), 0, w, h)
+            love.graphics.setShader()
         end
-        
-        --[[love.graphics.setColor(extra.hex("2c1e74"))
-        local mx, my = love.mouse.getPosition()
-        if self.curChunk.grids.collision[extra.vec2Union(
-            math.floor(math.floor(mx/_GAMESCALE)/_TILEWIDTH), 
-            math.floor(math.floor(my/_GAMESCALE)/_TILEHEIGHT) )] then 
-                extra.mainFont:print("touching", 2, 1) 
-        end]]
 
-        local posx, posy = extra.union2Vec(self.curChunkID) 
-        local str = "chunk x"..posx.." y"..posy
-
-        love.graphics.setColor(extra.hex("D58863"))
-        extra.mainFont:print(str, 3, 2)
-
-        love.graphics.setColor(extra.hex("2c1e74"))
-        extra.mainFont:print(str, 2, 1)
-
-        if self.animDirection.active then return end
-        for _, actor in ipairs(self.curChunk.actors) do
-            local _x = actor.ox - (actor.ox - actor.x) * actor.v
-            local _y = actor.oy - (actor.oy - actor.y) * actor.v + 0.5
-            love.graphics.rectangle("fill", math.floor(_x * _TILEWIDTH), math.floor(_y * _TILEHEIGHT), _TILEWIDTH, _TILEHEIGHT) 
+        love.graphics.setColor(1, 1, 1, 1)
+        if not self.animDirection.active then
+            for _, actor in ipairs(self.curChunk.actors) do
+                local _x = actor.ox - (actor.ox - actor.x) * actor.v
+                local _y = actor.oy - (actor.oy - actor.y) * actor.v
+                love.graphics.rectangle("fill", math.floor(_x * _TILEWIDTH), math.floor(_y * _TILEHEIGHT), _TILEWIDTH, _TILEHEIGHT) 
+            end
         end
+        love.graphics.setCanvas()
+        love.graphics.draw(self.mainCanvas, 0, 0, 0, _GAMESCALE, _GAMESCALE)
     end
 }

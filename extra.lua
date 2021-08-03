@@ -105,4 +105,10 @@ function utils.union2Vec(u)
     return bit.rshift(u, 16), bit.band(u, _16CAPACITY)
 end
 
+function utils.gotHere()
+    local info = debug.getinfo(2, "Sl")
+    local lineinfo = info.short_src .. ":" .. info.currentline
+    print(lineinfo)
+end
+
 return utils

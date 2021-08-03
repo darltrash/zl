@@ -26,6 +26,9 @@ freely, subject to the following restrictions:
 
 ]]
 
+_GRADIENT = love.graphics.newImage("assets/gradient.png")
+_BLANK = love.graphics.newImage("assets/blank.png")
+
 love.graphics.setDefaultFilter("nearest", "nearest")
 
 _CHUNKWIDTH = 18
@@ -39,6 +42,8 @@ _16CAPACITY = (2^16)-1
 _TABSIZE = 4
 
 love.window.setMode(_CHUNKWIDTH*_TILEWIDTH*_GAMESCALE, _CHUNKHEIGHT*_TILEHEIGHT*_GAMESCALE)
+
+print(_CHUNKWIDTH*_TILEWIDTH*_GAMESCALE, _CHUNKHEIGHT*_TILEHEIGHT*_GAMESCALE)
 
 local world = require 'world'
 
