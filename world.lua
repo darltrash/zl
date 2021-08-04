@@ -13,8 +13,10 @@ return {
     animDirection = { x = 0, y = 0, p = 0, active = false },
 
     systems = require("systems"),
+    timer = 0,
 
     mainCanvas = love.graphics.newCanvas(_TILEWIDTH*_CHUNKWIDTH, _TILEHEIGHT*_CHUNKHEIGHT),
+    lightCanvas = love.graphics.newCanvas(_TILEWIDTH*_CHUNKWIDTH, _TILEHEIGHT*_CHUNKHEIGHT),
 
     generateChunk = function(self, id)
         local c = {
@@ -23,11 +25,12 @@ return {
             tiles = {},
             grids = {
                 collision = {}
-            }
+            },
+            lights = {}
         }
 
-        local floor = extra.vec2Union(5, 1)
-        local collider = extra.vec2Union(3, 3)
+        local floor = extra.vec2Union(4, 1)
+        local cache = {}
         for x = 0, _CHUNKWIDTH do
             for y = 0, _CHUNKHEIGHT do
                 local t = {
@@ -35,13 +38,34 @@ return {
                     t = floor
                 }
 
-                if (x==0 or y==0 or x==_CHUNKWIDTH-1 or y==_CHUNKHEIGHT-1) and not ((x>3 and x<_CHUNKWIDTH-4) or (y>3 and y<_CHUNKHEIGHT-4)) then
-                    c.grids.collision[t.p] = true
-                    t.t = collider
-                end
                 table.insert(c.tiles, t)
+                cache[t.p] = t
             end
         end
+        for x = 1, _CHUNKWIDTH-2 do
+            if x==1 then
+                cache[extra.vec2Union(x, 1)].t = extra.vec2Union(2, 0)
+                cache[extra.vec2Union(x, _CHUNKHEIGHT-2)].t = extra.vec2Union(2, 1)
+            elseif x==_CHUNKWIDTH-2 then
+                cache[extra.vec2Union(x, 1)].t = extra.vec2Union(3, 0)
+                cache[extra.vec2Union(x, _CHUNKHEIGHT-2)].t = extra.vec2Union(3, 1)
+            else
+                cache[extra.vec2Union(x, 1)].t = extra.vec2Union(0, 0)
+                cache[extra.vec2Union(x, _CHUNKHEIGHT-2)].t = extra.vec2Union(1, 1)
+            end
+        end
+
+        for y = 2, _CHUNKHEIGHT-3 do
+            cache[extra.vec2Union(1, y)].t = extra.vec2Union(0, 1)
+            cache[extra.vec2Union(_CHUNKWIDTH-2, y)].t = extra.vec2Union(1, 0)
+        end
+
+        for x=2, _CHUNKWIDTH-3 do
+            for y=2, _CHUNKHEIGHT-3 do
+                cache[extra.vec2Union(x, y)].t = extra.vec2Union(3 + love.math.random(1, 3), 0) 
+            end
+        end
+
         return c
     end,
 
@@ -67,9 +91,12 @@ return {
             actor.y = actor.y % _CHUNKHEIGHT
             actor.ox = actor.x
             actor.oy = actor.y
-
-            actor._x = actor.x*_TILEWIDTH
-            actor._y = actor.y*_TILEHEIGHT
+            actor.v = 0
+            actor._moving = false
+            actor._movingBefore = false
+            
+            actor._x = actor.x * _TILEWIDTH
+            actor._y = actor.y * _TILEHEIGHT
 
             table.insert(self.nextChunk.actors, actor)
         end
@@ -115,6 +142,7 @@ return {
     end,
 
     process = function(self, delta)
+        self.timer = self.timer + delta
         if not self.curChunk then
             -- We'll assume this is a new world
             local chunk = self:generateChunk(0)
@@ -213,6 +241,27 @@ return {
             end
         end
         love.graphics.setCanvas()
-        love.graphics.draw(self.mainCanvas, 0, 0, 0, _GAMESCALE, _GAMESCALE)
+        love.graphics.setShader(shaders.light)
+        shaders.light:send("resolution", {_CHUNKWIDTH*_TILEWIDTH, _CHUNKHEIGHT*_TILEHEIGHT})
+        shaders.light:send("scale", _GAMESCALE)
+        shaders.light:send("amount", 0.4)
+
+        shaders.light:sendColor("dark", {extra.hex("#16161d")})
+        shaders.light:sendColor("light", {0.3, 0, 1, 1})
+
+        shaders.light:send("canvas", self.mainCanvas)
+        love.graphics.draw(_BLANK, 0, 0, 0, _CHUNKWIDTH*_TILEWIDTH*_GAMESCALE, _CHUNKHEIGHT*_TILEHEIGHT*_GAMESCALE)
+
+        if not self.animDirection.active then
+            for _, light in ipairs(self.curChunk.lights) do
+                shaders.light:sendColor("dark", light.dark)
+                shaders.light:sendColor("light", light.light)
+                shaders.light:send("amount", light.power)
+                love.graphics.setColor(1, 1, 1, light.power)
+                love.graphics.draw(_CIRCLE, light.x*_GAMESCALE, light.y*_GAMESCALE, self.timer*light.power, (light.size/64)*_GAMESCALE, (light.size/64)*_GAMESCALE, 64/2, 64/2)
+            end
+        end
+
+        love.graphics.setShader()
     end
 }

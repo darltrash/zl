@@ -26,10 +26,10 @@ freely, subject to the following restrictions:
 
 ]]
 
-_GRADIENT = love.graphics.newImage("assets/gradient.png")
-_BLANK = love.graphics.newImage("assets/blank.png")
-
 love.graphics.setDefaultFilter("nearest", "nearest")
+
+_BLANK = love.graphics.newImage("assets/blank.png")
+_CIRCLE = love.graphics.newImage("assets/circle.png")
 
 _CHUNKWIDTH = 18
 _CHUNKHEIGHT = 12

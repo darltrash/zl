@@ -77,7 +77,7 @@ end
 
 function utils.hex(h, a)
     h = h:gsub("#","")
-    return tonumber("0x"..h:sub(1,2))/255, tonumber("0x"..h:sub(3,4))/255, tonumber("0x"..h:sub(5,6))/255, a
+    return tonumber("0x"..h:sub(1,2))/255, tonumber("0x"..h:sub(3,4))/255, tonumber("0x"..h:sub(5,6))/255, a or 0
 end
 
 function utils.luma(r, g, b)
