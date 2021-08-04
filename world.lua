@@ -203,36 +203,44 @@ return {
         local _offsetX = _CHUNKWIDTH  * _TILEWIDTH  * self.animDirection.x
         local _offsetY = _CHUNKHEIGHT * _TILEHEIGHT * self.animDirection.y
 
-        love.graphics.setCanvas(self.mainCanvas)
+        shaders.mapper:sendColor("dark", {extra.hex("#16161d")})
+        shaders.mapper:sendColor("light", {0.3, 0, 1, 1})
+        love.graphics.setShader(shaders.mapper)
+        love.graphics.setCanvas(self.mainCanvas, self.lightCanvas)
         love.graphics.clear(0, 0, 0, 0)
         love.graphics.setColor(1, 1, 1, 1)
 
-        love.graphics.draw(self.curChunk.prerender, 0, 0)
+        love.graphics.setBlendMode("replace")
+        love.graphics.draw(self.curChunk.prerender)
         if self.nextChunk then
             local f = math.floor
             love.graphics.draw(self.nextChunk.prerender, f(_offsetX*_a), f(_offsetY*_a))
+            love.graphics.setBlendMode("alpha")
+
 
             -- Animation gradient stuff
 
             love.graphics.setColor(0, 0, 0, (1-_a)*0.6)
             local w, h = _CHUNKWIDTH  * _TILEWIDTH, _CHUNKHEIGHT  * _TILEHEIGHT
 
-            love.graphics.setShader(shaders.gradient)
-            shaders.gradient:send("dir", 1)
-            shaders.gradient:send("a", 0)
+            --love.graphics.setShader(shaders.gradient)
+            --shaders.gradient:send("dir", 1)
+            --shaders.gradient:send("a", 0)
             love.graphics.draw(_BLANK, f(_offsetX*_a), f(_offsetY*_a)+h, 0, w, h)
-            shaders.gradient:send("a", 1)
+            --shaders.gradient:send("a", 1)
             love.graphics.draw(_BLANK, f(_offsetX*_a), f(_offsetY*_a)-h, 0, w, h)
 
-            shaders.gradient:send("dir", 0)
-            shaders.gradient:send("a", 0)
+            --shaders.gradient:send("dir", 0)
+            --shaders.gradient:send("a", 0)
             love.graphics.draw(_BLANK, f(_offsetX*_a)+w, f(_offsetY*_a), 0, w, h)
-            shaders.gradient:send("a", 1)
+            --shaders.gradient:send("a", 1)
             love.graphics.draw(_BLANK, f(_offsetX*_a)-w, f(_offsetY*_a), 0, w, h)
-            love.graphics.setShader()
+            --love.graphics.setShader()
         end
+        love.graphics.setBlendMode("alpha")
 
         love.graphics.setColor(1, 1, 1, 1)
+        shaders.mapper:send("luminance", 1)
         if not self.animDirection.active then
             for _, actor in ipairs(self.curChunk.actors) do
                 local _x = actor.ox - (actor.ox - actor.x) * actor.v
@@ -240,28 +248,11 @@ return {
                 love.graphics.rectangle("fill", math.floor(_x * _TILEWIDTH), math.floor(_y * _TILEHEIGHT), _TILEWIDTH, _TILEHEIGHT) 
             end
         end
-        love.graphics.setCanvas()
-        love.graphics.setShader(shaders.light)
-        shaders.light:send("resolution", {_CHUNKWIDTH*_TILEWIDTH, _CHUNKHEIGHT*_TILEHEIGHT})
-        shaders.light:send("scale", _GAMESCALE)
-        shaders.light:send("amount", 0.4)
-
-        shaders.light:sendColor("dark", {extra.hex("#16161d")})
-        shaders.light:sendColor("light", {0.3, 0, 1, 1})
-
-        shaders.light:send("canvas", self.mainCanvas)
-        love.graphics.draw(_BLANK, 0, 0, 0, _CHUNKWIDTH*_TILEWIDTH*_GAMESCALE, _CHUNKHEIGHT*_TILEHEIGHT*_GAMESCALE)
-
-        if not self.animDirection.active then
-            for _, light in ipairs(self.curChunk.lights) do
-                shaders.light:sendColor("dark", light.dark)
-                shaders.light:sendColor("light", light.light)
-                shaders.light:send("amount", light.power)
-                love.graphics.setColor(1, 1, 1, light.power)
-                love.graphics.draw(_CIRCLE, light.x*_GAMESCALE, light.y*_GAMESCALE, self.timer*light.power, (light.size/64)*_GAMESCALE, (light.size/64)*_GAMESCALE, 64/2, 64/2)
-            end
-        end
-
+        shaders.mapper:send("luminance", 0)
         love.graphics.setShader()
+        love.graphics.setCanvas()
+        
+        love.graphics.draw(self.mainCanvas, 0, 0, 0, _GAMESCALE)
+        love.graphics.draw(self.lightCanvas, 0, 0, 0, _GAMESCALE)
     end
 }
