@@ -155,7 +155,7 @@ return {
             self.curChunkID = 0
         end
 
-        self.animDirection.p = extra.lerp(self.animDirection.p, 0, delta*6)
+        self.animDirection.p = extra.lerp(self.animDirection.p, 0, delta*10)
         if self.animDirection.active and self.animDirection.p<0.2 then 
             self.animDirection.active = false 
             self.curChunk.prerender = nil
