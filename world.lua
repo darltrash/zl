@@ -3,6 +3,7 @@ local shaders = require 'shaders'
 
 return {
     tileset = love.graphics.newImage("assets/test_tileset.png"),
+    tilesetLightmap = love.graphics.newImage("assets/test_tileset_lightmap.png"),
     _tilesetCache = {};
 
     spriteset = nil, -- TODO
@@ -66,6 +67,8 @@ return {
             end
         end
 
+        cache[extra.vec2Union(8, 4)].t = extra.vec2Union(0, 2) 
+
         return c
     end,
 
@@ -76,7 +79,7 @@ return {
         end
         self.nextChunk = self.chunks[self.nextChunkID]
 
-        self.nextChunk.prerender = self:renderTiles(self.nextChunk)
+        self.nextChunk.prerender, self.nextChunk.prerenderLightmap = self:renderTiles(self.nextChunk)
 
         if actor then
             local newGen = {}
@@ -107,12 +110,12 @@ return {
 
     renderTiles = function(self, chunk)
         local canvas = love.graphics.newCanvas(_CHUNKWIDTH*_TILEWIDTH, _CHUNKHEIGHT*_TILEHEIGHT)
+        local lightCanvas = love.graphics.newCanvas(_CHUNKWIDTH*_TILEWIDTH, _CHUNKHEIGHT*_TILEHEIGHT)
 
         love.graphics.setCanvas(canvas)
             love.graphics.clear(0, 0, 0, 0)
 
             local posx, posy = extra.union2Vec(chunk.id) 
-            local str = "chunk x"..posx.." y"..posy
 
             love.graphics.setColor(1, 1, 1, 1)
 
@@ -126,19 +129,21 @@ return {
                 end
 
                 love.graphics.draw(self.tileset, self._tilesetCache[tile.t], x*_TILEWIDTH, y*_TILEHEIGHT)
-
-                if chunk.grids.collision[tile.p] and false then 
-                    love.graphics.setColor(0, 0, 1, 1)
-                    love.graphics.draw(self.tileset, self._tilesetCache[tile.t], x*_TILEWIDTH, y*_TILEHEIGHT)
-                    love.graphics.setColor(1, 1, 1, 1)
-                end 
             end
 
-            love.graphics.setColor(extra.hex("000000"))
-            extra.mainFont:print(str, 1, 1)
+            extra.mainFont:print("chunk x"..posx.." y"..posy, 1, 1)
         love.graphics.setCanvas()
 
-        return canvas
+        love.graphics.setCanvas(lightCanvas)
+            love.graphics.clear(0, 0, 0, 0)
+            love.graphics.setColor(1, 1, 1, 1)
+            for _, tile in ipairs(chunk.tiles) do
+                local x, y = extra.union2Vec(tile.p)
+                love.graphics.draw(self.tilesetLightmap, self._tilesetCache[tile.t], x*_TILEWIDTH, y*_TILEHEIGHT)
+            end
+        love.graphics.setCanvas()
+
+        return canvas, lightCanvas
     end,
 
     process = function(self, delta)
@@ -194,53 +199,50 @@ return {
         self.curChunk.actors = newGen
 
         if not self.curChunk.prerender then 
-            self.curChunk.prerender = self:renderTiles(self.curChunk)
+            self.curChunk.prerender, self.curChunk.prerenderLightmap = self:renderTiles(self.curChunk)
         end
     end,
 
     draw = function(self)
+        love.graphics.setColor(1, 1, 1, 1)
         local _a = self.animDirection.p/100
         local _offsetX = _CHUNKWIDTH  * _TILEWIDTH  * self.animDirection.x
         local _offsetY = _CHUNKHEIGHT * _TILEHEIGHT * self.animDirection.y
 
         shaders.mapper:sendColor("dark", {extra.hex("#16161d")})
         shaders.mapper:sendColor("light", {0.3, 0, 1, 1})
+
         love.graphics.setShader(shaders.mapper)
         love.graphics.setCanvas(self.mainCanvas, self.lightCanvas)
         love.graphics.clear(0, 0, 0, 0)
         love.graphics.setColor(1, 1, 1, 1)
 
         love.graphics.setBlendMode("replace")
+
+        shaders.mapper:send("luminance", {1, 1, 1, 1})
+        shaders.mapper:send("lumMap", self.curChunk.prerenderLightmap)
         love.graphics.draw(self.curChunk.prerender)
+
         if self.nextChunk then
             local f = math.floor
+
+            shaders.mapper:send("lumMap", self.nextChunk.prerenderLightmap)
             love.graphics.draw(self.nextChunk.prerender, f(_offsetX*_a), f(_offsetY*_a))
             love.graphics.setBlendMode("alpha")
-
-
-            -- Animation gradient stuff
 
             love.graphics.setColor(0, 0, 0, (1-_a)*0.6)
             local w, h = _CHUNKWIDTH  * _TILEWIDTH, _CHUNKHEIGHT  * _TILEHEIGHT
 
-            --love.graphics.setShader(shaders.gradient)
-            --shaders.gradient:send("dir", 1)
-            --shaders.gradient:send("a", 0)
             love.graphics.draw(_BLANK, f(_offsetX*_a), f(_offsetY*_a)+h, 0, w, h)
-            --shaders.gradient:send("a", 1)
             love.graphics.draw(_BLANK, f(_offsetX*_a), f(_offsetY*_a)-h, 0, w, h)
-
-            --shaders.gradient:send("dir", 0)
-            --shaders.gradient:send("a", 0)
             love.graphics.draw(_BLANK, f(_offsetX*_a)+w, f(_offsetY*_a), 0, w, h)
-            --shaders.gradient:send("a", 1)
             love.graphics.draw(_BLANK, f(_offsetX*_a)-w, f(_offsetY*_a), 0, w, h)
-            --love.graphics.setShader()
         end
+
         love.graphics.setBlendMode("alpha")
 
-        love.graphics.setColor(1, 1, 1, 1)
-        shaders.mapper:send("luminance", 1)
+        shaders.mapper:send("luminance", {0, 0, 0, 0})
+        shaders.mapper:send("lumMap", _BLANK)
         if not self.animDirection.active then
             for _, actor in ipairs(self.curChunk.actors) do
                 local _x = actor.ox - (actor.ox - actor.x) * actor.v
@@ -248,7 +250,6 @@ return {
                 love.graphics.rectangle("fill", math.floor(_x * _TILEWIDTH), math.floor(_y * _TILEHEIGHT), _TILEWIDTH, _TILEHEIGHT) 
             end
         end
-        shaders.mapper:send("luminance", 0)
         love.graphics.setShader()
         love.graphics.setCanvas()
         
