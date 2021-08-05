@@ -40,14 +40,17 @@ _GAMESCALE = 2
 _16CAPACITY = (2^16)-1
 
 _TABSIZE = 4
+_DEBUGMODE = os.getenv("ZL_DEBUGMODE")
 
 love.window.setMode(_CHUNKWIDTH*_TILEWIDTH*_GAMESCALE, _CHUNKHEIGHT*_TILEHEIGHT*_GAMESCALE)
 
 print(_CHUNKWIDTH*_TILEWIDTH*_GAMESCALE, _CHUNKHEIGHT*_TILEHEIGHT*_GAMESCALE)
 
 local world = require 'world'
+if _DEBUGMODE then _G.WORLDREF = world end
 
 function love.update(dt)
+    if _DEBUGMODE then require("lovebird").update() end
     world:process(dt)
 end
 

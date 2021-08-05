@@ -18,6 +18,9 @@ return {
     mainCanvas = love.graphics.newCanvas(_TILEWIDTH*_CHUNKWIDTH, _TILEHEIGHT*_CHUNKHEIGHT),
     lightCanvas = love.graphics.newCanvas(_TILEWIDTH*_CHUNKWIDTH, _TILEHEIGHT*_CHUNKHEIGHT),
 
+    darkcolor = {0.1, 0, 0.6, 1},
+    lightcolor = {183/255,1,211/255, 1},
+
     generateChunk = function(self, id)
         local c = {
             id = id,
@@ -89,8 +92,8 @@ return {
 
             actor.x = actor.x % _CHUNKWIDTH
             actor.y = actor.y % _CHUNKHEIGHT
-            actor.ox = actor.x
-            actor.oy = actor.y
+            actor.ox = nil
+            actor.oy = nil
             actor.v = 0
             actor._moving = false
             actor._movingBefore = false
@@ -112,7 +115,7 @@ return {
             love.graphics.clear(0, 0, 0, 0)
 
             local posx, posy = extra.union2Vec(chunk.id) 
-            local str = "chunk x"..posx.." y"..posy
+            local str = "chunk *x"..posx.." y"..posy.."*"
 
             love.graphics.setColor(1, 1, 1, 1)
 
@@ -135,7 +138,7 @@ return {
             end
 
             love.graphics.setColor(extra.hex("000000"))
-            extra.mainFont:print(str, 1, 1)
+            extra.mainFont:print(str, 1, 1, nil, {0, .4, 1, 1})
         love.graphics.setCanvas()
 
         return canvas
@@ -242,9 +245,9 @@ return {
         end
         love.graphics.setCanvas()
         love.graphics.setShader(shaders.mapper)
-        shaders.mapper:send("amount", 0.4)
-        shaders.mapper:sendColor("dark", {extra.hex("#16161d")})
-        shaders.mapper:sendColor("light", {0.3, 0, 1, 1})
+        shaders.mapper:send("amount", .3)
+        shaders.mapper:sendColor("dark", self.darkcolor)
+        shaders.mapper:sendColor("light", self.lightcolor)
         love.graphics.draw(self.mainCanvas, 0, 0, 0, _GAMESCALE)
 
         love.graphics.setShader()

@@ -27,10 +27,14 @@ utils.font = setmetatable({
         return font
     end, 
 
-    print = function (font, str, x, y, stopwhen)
+    print = function (font, str, x, y, stopwhen, highlightColor)
+        highlightColor = highlightColor or {1, 0, 0, 1}
         x, y = math.floor(x or 0), math.floor(y or 0)
+
         local count, cx, cy = 0, 0, 0
         local mx, my = 0, 0
+        local highlighting = false
+        local originColor = {love.graphics.getColor()}
     
         for char in str:gmatch(".") do
             if stopwhen==count then break end
@@ -42,6 +46,9 @@ utils.font = setmetatable({
             elseif char=="\t" then
                 cx = cx + _TABSIZE
                 mx = mx + _TABSIZE
+            elseif char=="*" then
+                highlighting = not highlighting
+                love.graphics.setColor((highlighting and highlightColor) or originColor)
             else
                 if font.glyphs[char] then
                     love.graphics.draw(font.spr, font.glyphs[char], x+(cx*font.charW), y+(cy*font.charH))
@@ -52,6 +59,8 @@ utils.font = setmetatable({
     
             count = count +1
         end
+        love.graphics.setColor(originColor)
+
         return (mx*font.charW), (my*font.charH)
     end,
 
@@ -77,7 +86,7 @@ end
 
 function utils.hex(h, a)
     h = h:gsub("#","")
-    return tonumber("0x"..h:sub(1,2))/255, tonumber("0x"..h:sub(3,4))/255, tonumber("0x"..h:sub(5,6))/255, a or 0
+    return tonumber("0x"..h:sub(1,2))/255, tonumber("0x"..h:sub(3,4))/255, tonumber("0x"..h:sub(5,6))/255, a or 1
 end
 
 function utils.luma(r, g, b)
