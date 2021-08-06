@@ -1,12 +1,13 @@
 return {
     playerInteraction = function(npc)
-        npc:say("Ah, I have seen that you have\npressed DEBUGBUTTON_01")
-        npc:say("I will now ask you the *PASSCODE*\nSelect the right word", {"darltrash", "darltrash", "darltrash"})
-        npc:say("Select the right word", {"fucking", "fucking", "fucking"})
-        npc:say("Select the right word", {"SUCKS", "SUCKS", "SUCKS"})
-        npc:say("Select the right word", {"at", "at", "at"})
-        npc:say("Select the right word", {"gamedev", "design", "music"})
-        npc:say("Correct! Prepare to die.")
-        love.event.quit()
+        npc:say("Hello! It seems you have pressed\nthe *Special Button For Super\nSpecific Debugging Scenes* or\n*S.B.F.S.S.D.S*!")
+        local _r = npc:say("Do you like either pizza or\npasta?", {"Macarroni", "MUSHROOM...", "HOT DOG"})
+        if _r==1 then
+            npc:say("Great taste!\n\nI like macarronis a lot because\ni like *CHEESE*")
+        elseif _r==2 then
+            npc:say("maruo")
+        else
+            npc:say("GOOD, TASTE GOOD")
+        end
     end
 }
