@@ -1,6 +1,7 @@
-local kb = love.keyboard
 local ex = require "extra"
 local dialog = require "dialog"
+local input = require "input"
+
 local scripting = {
     handle = {},
     say = function(self, message, options)
@@ -8,7 +9,7 @@ local scripting = {
             local info = debug.getinfo(2, "Sl")
             message = "*ERROR*, " .. info.short_src .. ":" .. info.currentline
         end
-        print(message)
+
         dialog:spawn(message, options)
         coroutine.yield(2) -- DIALOG
         return dialog.selection
@@ -20,7 +21,7 @@ return {
         local AWAIT, NEXT, DIALOG, MOVEMENT = 0, 1, 2, 3
         
         if (not actor._scr_script) and actor._scr_scriptset then
-            if love.keyboard.isDown("p") then 
+            if input:isDown("DEBUGBUTTON_01") then 
                 actor._scr_script = coroutine.create(actor._scr_scriptset.playerInteraction) 
             end
             actor._src_state = NEXT
@@ -53,10 +54,10 @@ return {
 
         if not actor._moving then
             local _y = actor.y
-            if kb.isDown("up") then
+            if input:isDown("up") then
                 _y = actor.y - 1
             end
-            if kb.isDown("down") then
+            if input:isDown("down") then
                 _y = actor.y + 1
             end
             if not cols[ex.vec2Union(actor.x, _y)] then
@@ -64,10 +65,10 @@ return {
             end
 
             local _x = actor.x
-            if kb.isDown("left") then
+            if input:isDown("left") then
                 _x = actor.x - 1
             end
-            if kb.isDown("right") then
+            if input:isDown("right") then
                 _x = actor.x + 1
             end
             if not cols[ex.vec2Union(_x, actor.y)] then

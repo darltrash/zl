@@ -69,7 +69,7 @@ utils.font = setmetatable({
     end
 }, { __call = function(self, ...) return self:init(...) end })
 
-utils.mainFont = utils.font("assets/font.png", "ABCDEFGHIJKLMN_OPQRSTUVWXYZabcdefghijklmn_opqrstuvwxyz1234567890!?.,")
+utils.mainFont = utils.font("assets/font.png", "ABCDEFGHIJKLMN_OPQRSTUVWXYZabcdefghijklmn_opqrstuvwxyz0123456789!?.,")
 
 function utils.lerp(a, b, t) 
     return a * (1-t) + b * t 

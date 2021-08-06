@@ -17,7 +17,6 @@ return {
     timer = 0,
 
     mainCanvas = love.graphics.newCanvas(_TILEWIDTH*_CHUNKWIDTH, _TILEHEIGHT*_CHUNKHEIGHT),
-    lightCanvas = love.graphics.newCanvas(_TILEWIDTH*_CHUNKWIDTH, _TILEHEIGHT*_CHUNKHEIGHT),
 
     darkcolor = {73/255, 0, 151/255, 1},
     lightcolor = {extra.hex("e45b78")},

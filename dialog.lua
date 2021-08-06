@@ -1,10 +1,14 @@
 local extra = require "extra"
+local input = require "input"
+
+local WHITE = {1, 1, 1, 1}
+local BLACK = {0, 0, 0, 1}
 
 return {
     currchar = 0,
     currText = "",
     velocity = 18,
-    options = {"ok"},
+    options = {"next"},
     selection = 1,
     bottom = true,
     ready = true,
@@ -12,7 +16,7 @@ return {
     spawn = function(self, text, options)
         self.currchar = 0
         self.currText = text 
-        self.options = options or {"ok"}
+        self.options = options or {"next"}
         self.selection = 1
         self.ready = false
     end,
@@ -20,18 +24,16 @@ return {
     update = function(self, delta)
         if self.ready then return end
         self.currchar = self.currchar + delta * self.velocity
-        if (self.currchar > #self.currText) then
-            self.ready = love.keyboard.isDown("x")
-        end
+        self.ready = (self.currchar > #self.currText) and input:isDown("accept")
 
-        if love.keyboard.isDown("left") then
+        if input:justDown("left") then
             self.selection = self.selection -1
             if self.selection < 1 then
                 self.selection = #self.options
             end
         end
 
-        if love.keyboard.isDown("right") then
+        if input:justDown("right") then
             self.selection = self.selection +1
             if self.selection > #self.options then
                 self.selection = 1
@@ -50,26 +52,23 @@ return {
             oy = h - (ch - 8)
         end
 
-        love.graphics.setColor(0, 0, 0, 1)
+        love.graphics.setColor(BLACK)
         love.graphics.rectangle("fill", ox, oy, cw, ch)
 
-        love.graphics.setColor(1, 1, 1, 1)
-        extra.mainFont:print(self.currText, w + ox, h + oy, math.floor(self.currchar), {1, 1, 0, 1})
+        love.graphics.setColor(WHITE)
+        extra.mainFont:print(self.currText, w + ox, h + oy, math.floor(self.currchar), {1, 0.7, 0.9, 1})
 
         if (self.currchar > #self.currText) then
-            local o = ""
+            local c = 0
             for i, v in ipairs(self.options) do
-                local h = (self.selection==i) and "*" or ""
-                local t = (#self.options~=i) and ", " or ""
-                o = o .. h .. v .. t .. h
-            end
-            print("'"..o.."'")
+                love.graphics.setColor((self.selection==i) and WHITE or BLACK)
+                love.graphics.rectangle("fill", c + ox, oy+ch+1, ((#v)*w)+3, h+3)
 
-            love.graphics.setColor(0, 0, 0, 1)
-            love.graphics.rectangle("fill", 8, 13+(34*8), ((#o-2)*w)+4, 11)
-            love.graphics.setColor(.57, .57, .57, 1)
-            extra.mainFont:print(o, 10, 14+(7*h), math.floor(self.currchar), {1, 1, 1, 1})
+                love.graphics.setColor((self.selection==i) and BLACK or WHITE)
+                extra.mainFont:print(v, c+ox+2, oy+ch+3, math.floor(self.currchar))
+                c = c + ((#v-2)*w)+3+16
+            end
         end
-        love.graphics.setColor(1, 1, 1, 1)
+        love.graphics.setColor(WHITE)
     end
 }
