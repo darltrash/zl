@@ -27,6 +27,8 @@ freely, subject to the following restrictions:
 ]]
 
 love.graphics.setDefaultFilter("nearest", "nearest")
+love.graphics.setLineStyle("rough")
+love.graphics.setLineWidth(1)
 
 _BLANK = love.graphics.newImage("assets/blank.png")
 _CIRCLE = love.graphics.newImage("assets/circle.png")
@@ -35,6 +37,7 @@ _CHUNKWIDTH = 18
 _CHUNKHEIGHT = 12
 _TILEWIDTH = 16
 _TILEHEIGHT = 16
+_W, H = _CHUNKWIDTH * _TILEWIDTH, _CHUNKHEIGHT * _TILEHEIGHT
 
 _GAMESCALE = 2
 _16CAPACITY = (2^16)-1
@@ -43,8 +46,6 @@ _TABSIZE = 4
 _DEBUGMODE = os.getenv("ZL_DEBUGMODE")
 
 love.window.setMode(_CHUNKWIDTH*_TILEWIDTH*_GAMESCALE, _CHUNKHEIGHT*_TILEHEIGHT*_GAMESCALE)
-
-print(_CHUNKWIDTH*_TILEWIDTH*_GAMESCALE, _CHUNKHEIGHT*_TILEHEIGHT*_GAMESCALE)
 
 local world = require 'world'
 if _DEBUGMODE then _G.WORLDREF = world end

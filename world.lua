@@ -1,5 +1,6 @@
 local extra = require 'extra'
 local shaders = require 'shaders'
+local dialog = require 'dialog'
 
 return {
     tileset = love.graphics.newImage("assets/test_tileset.png"),
@@ -18,8 +19,8 @@ return {
     mainCanvas = love.graphics.newCanvas(_TILEWIDTH*_CHUNKWIDTH, _TILEHEIGHT*_CHUNKHEIGHT),
     lightCanvas = love.graphics.newCanvas(_TILEWIDTH*_CHUNKWIDTH, _TILEHEIGHT*_CHUNKHEIGHT),
 
-    darkcolor = {0.1, 0, 0.6, 1},
-    lightcolor = {183/255,1,211/255, 1},
+    darkcolor = {73/255, 0, 151/255, 1},
+    lightcolor = {extra.hex("e45b78")},
 
     generateChunk = function(self, id)
         local c = {
@@ -115,7 +116,7 @@ return {
             love.graphics.clear(0, 0, 0, 0)
 
             local posx, posy = extra.union2Vec(chunk.id) 
-            local str = "chunk *x"..posx.." y"..posy.."*"
+            local str = "chunk x*"..posx.."* y*"..posy.."*"
 
             love.graphics.setColor(1, 1, 1, 1)
 
@@ -134,7 +135,7 @@ return {
                     love.graphics.setColor(0, 0, 1, 1)
                     love.graphics.draw(self.tileset, self._tilesetCache[tile.t], x*_TILEWIDTH, y*_TILEHEIGHT)
                     love.graphics.setColor(1, 1, 1, 1)
-                end 
+                end
             end
 
             love.graphics.setColor(extra.hex("000000"))
@@ -154,6 +155,7 @@ return {
             self.chunks[0] = chunk
             self.curChunk = chunk
             table.insert(self.curChunk.actors, {s=999, x = 3, y = 3})
+            table.insert(self.curChunk.actors, {s=998, x = 3, y = 3, _scr_scriptset = require "scripting.test"})
 
             self.curChunkID = 0
         end
@@ -199,6 +201,7 @@ return {
         if not self.curChunk.prerender then 
             self.curChunk.prerender = self:renderTiles(self.curChunk)
         end
+        dialog:update(delta)
     end,
 
     draw = function(self)
@@ -243,6 +246,7 @@ return {
                 love.graphics.rectangle("fill", math.floor(_x * _TILEWIDTH), math.floor(_y * _TILEHEIGHT), _TILEWIDTH, _TILEHEIGHT) 
             end
         end
+        dialog:draw()
         love.graphics.setCanvas()
         love.graphics.setShader(shaders.mapper)
         shaders.mapper:send("amount", .3)

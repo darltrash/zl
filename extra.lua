@@ -57,7 +57,7 @@ utils.font = setmetatable({
                 mx = mx + 1
             end
     
-            count = count +1
+            count = count + 1
         end
         love.graphics.setColor(originColor)
 
@@ -69,7 +69,7 @@ utils.font = setmetatable({
     end
 }, { __call = function(self, ...) return self:init(...) end })
 
-utils.mainFont = utils.font("assets/font.png", "abcdefghijklmnopqrstuvwxyz1234567890")
+utils.mainFont = utils.font("assets/font.png", "ABCDEFGHIJKLMN_OPQRSTUVWXYZabcdefghijklmn_opqrstuvwxyz1234567890!?.,")
 
 function utils.lerp(a, b, t) 
     return a * (1-t) + b * t 
