@@ -11,6 +11,8 @@ utils.font = setmetatable({
             glyphs = {},
             print = self.print, testprint = self.testprint
         }
+
+        font.spr:setFilter("nearest", "nearest")
         
         local w = font.spr:getWidth()
         local h = font.spr:getHeight()
@@ -25,7 +27,7 @@ utils.font = setmetatable({
         end
 
         return font
-    end, 
+    end,
 
     print = function (font, str, x, y, stopwhen, highlightColor)
         highlightColor = highlightColor or {1, 0, 0, 1}
@@ -35,10 +37,10 @@ utils.font = setmetatable({
         local mx, my = 0, 0
         local highlighting = false
         local originColor = {love.graphics.getColor()}
-    
+
         for char in str:gmatch(".") do
             if stopwhen==count then break end
-    
+
             if char=="\n" then
                 cy = cy + 1
                 my = my + 1
@@ -69,7 +71,7 @@ utils.font = setmetatable({
     end
 }, { __call = function(self, ...) return self:init(...) end })
 
-utils.mainFont = utils.font("assets/font.png", "ABCDEFGHIJKLMN_OPQRSTUVWXYZabcdefghijklmn_opqrstuvwxyz0123456789!?.,")
+utils.mainFont = utils.font("assets/font.png", "ABCDEFGHIJKLMN_OPQRSTUVWXYZabcdefghijklmn_opqrstuvwxyz0123456789!?.,:;><$()")
 
 function utils.lerp(a, b, t) 
     return a * (1-t) + b * t 

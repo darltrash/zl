@@ -4,13 +4,13 @@ local input = require "input"
 
 local scripting = {
     handle = {},
-    say = function(self, message, options)
+    say = function(self, message, options, listmode)
         if type(message)~="string" then
             local info = debug.getinfo(2, "Sl")
             message = "*ERROR*, " .. info.short_src .. ":" .. info.currentline
         end
 
-        dialog:spawn(message, options)
+        dialog:spawn(message, options, listmode)
         coroutine.yield(2) -- DIALOG
         return dialog.selection
     end
@@ -52,7 +52,7 @@ return {
         actor.vel = 10
         local cols = chunk.grids.collision
 
-        if not actor._moving then
+        if dialog.ready and not actor._moving then
             local _y = actor.y
             if input:isDown("up") then
                 _y = actor.y - 1

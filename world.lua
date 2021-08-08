@@ -13,24 +13,25 @@ return {
 
     animDirection = { x = 0, y = 0, p = 0, active = false },
 
-    systems = require("systems"),
+    systems = require("systems"), -- Load all actor systems
     timer = 0,
 
     mainCanvas = love.graphics.newCanvas(_TILEWIDTH*_CHUNKWIDTH, _TILEHEIGHT*_CHUNKHEIGHT),
 
-    darkcolor = {73/255, 0, 151/255, 1},
+    darkcolor = {73/255, 0, 151/255, 1},  -- Gradient map pallete
     lightcolor = {extra.hex("e45b78")},
 
-    generateChunk = function(self, id)
+    generateChunk = function(self, id) -- Generates chunk
         local c = {
             id = id,
             actors = {},
             tiles = {},
             grids = {
                 collision = {}
-            },
-            lights = {}
+            }
         }
+
+        -- TODO: Get rid of this bullshit code and actually do a map loader or a random generator
 
         local floor = extra.vec2Union(4, 1)
         local cache = {}
@@ -111,7 +112,7 @@ return {
     renderTiles = function(self, chunk)
         local canvas = love.graphics.newCanvas(_CHUNKWIDTH*_TILEWIDTH, _CHUNKHEIGHT*_TILEHEIGHT)
 
-        love.graphics.setCanvas(canvas)
+        love.graphics.setCanvas(canvas) -- PRERENDER EVERYTHINNNNNNNNNNNGGGG
             love.graphics.clear(0, 0, 0, 0)
 
             local posx, posy = extra.union2Vec(chunk.id) 
@@ -137,7 +138,7 @@ return {
                 end
             end
 
-            love.graphics.setColor(extra.hex("000000"))
+            love.graphics.setColor(extra.hex("000000")) -- Also a cool chunk count thing :)
             extra.mainFont:print(str, 1, 1, nil, {0, .4, 1, 1})
         love.graphics.setCanvas()
 
@@ -153,13 +154,13 @@ return {
             table.insert(self.chunkrefs, chunk)
             self.chunks[0] = chunk
             self.curChunk = chunk
-            table.insert(self.curChunk.actors, {s=999, x = 3, y = 3})
-            table.insert(self.curChunk.actors, {s=998, x = 3, y = 3, _scr_scriptset = require "scripting.test"})
+            table.insert(self.curChunk.actors, {s=999, x = 3, y = 3}) -- TEST PLAYER
+            table.insert(self.curChunk.actors, {s=998, x = 3, y = 3, _scr_scriptset = require "scripting.test"}) -- TEST DIALOG THING
 
             self.curChunkID = 0
         end
 
-        self.animDirection.p = extra.lerp(self.animDirection.p, 0, delta*10)
+        self.animDirection.p = extra.lerp(self.animDirection.p, 0, delta*10) -- Chunk transition animation
         if self.animDirection.active and self.animDirection.p<0.2 then 
             self.animDirection.active = false 
             self.curChunk.prerender = nil
@@ -171,7 +172,7 @@ return {
 
         if self.animDirection.active then return end
         local newGen = {}
-        for _, actor in ipairs(self.curChunk.actors) do
+        for _, actor in ipairs(self.curChunk.actors) do -- for each "actor"/entity, animate them
             actor.ox = actor.ox or actor.x
             actor.oy = actor.oy or actor.y
             actor.v = actor.v or 0
@@ -188,17 +189,17 @@ return {
                 actor._moving = actor.ox ~= actor.x or actor.oy ~= actor.y 
             end
             
-            self.systems[actor.s](actor, delta, self.curChunk, self)
+            self.systems[actor.s](actor, delta, self.curChunk, self) -- Process the actor
 
-            if not actor.die then 
+            if not actor.die then -- if actor is dying, then skip it next time
                 table.insert(newGen, actor) 
             end
             actor._movingBefore = actor._moving
         end
         self.curChunk.actors = newGen
 
-        if not self.curChunk.prerender then 
-            self.curChunk.prerender = self:renderTiles(self.curChunk)
+        if not self.curChunk.prerender then -- If tiles havent been prerendered:
+            self.curChunk.prerender = self:renderTiles(self.curChunk) -- then do it now.
         end
         dialog:update(delta)
     end,
@@ -208,14 +209,14 @@ return {
         local _offsetX = _CHUNKWIDTH  * _TILEWIDTH  * self.animDirection.x
         local _offsetY = _CHUNKHEIGHT * _TILEHEIGHT * self.animDirection.y
 
-        love.graphics.setCanvas(self.mainCanvas)
+        love.graphics.setCanvas(self.mainCanvas) -- Render everything onto "canvas"
         love.graphics.clear(0, 0, 0, 0)
         love.graphics.setColor(1, 1, 1, 1)
 
         love.graphics.draw(self.curChunk.prerender, 0, 0)
-        if self.nextChunk then
+        if self.nextChunk then -- If transitioning into a new chunk, render it with an offset (animation)
             local f = math.floor
-            love.graphics.draw(self.nextChunk.prerender, f(_offsetX*_a), f(_offsetY*_a))
+            love.graphics.draw(self.nextChunk.prerender, f(_offsetX*_a), f(_offsetY*_a)) 
 
             -- Animation gradient stuff
 
@@ -224,17 +225,18 @@ return {
 
             love.graphics.setShader(shaders.gradient)
             shaders.gradient:send("dir", 1)
-            shaders.gradient:send("a", 0)
+            shaders.gradient:send("a", 0) -- Draw from down to up
             love.graphics.draw(_BLANK, f(_offsetX*_a), f(_offsetY*_a)+h, 0, w, h)
-            shaders.gradient:send("a", 1)
+
+            shaders.gradient:send("a", 1) -- Draw from up to down
             love.graphics.draw(_BLANK, f(_offsetX*_a), f(_offsetY*_a)-h, 0, w, h)
 
             shaders.gradient:send("dir", 0)
-            shaders.gradient:send("a", 0)
+            shaders.gradient:send("a", 0) -- Draw from left to right
             love.graphics.draw(_BLANK, f(_offsetX*_a)+w, f(_offsetY*_a), 0, w, h)
-            shaders.gradient:send("a", 1)
+            shaders.gradient:send("a", 1) -- Draw from right to left
             love.graphics.draw(_BLANK, f(_offsetX*_a)-w, f(_offsetY*_a), 0, w, h)
-            love.graphics.setShader()
+            love.graphics.setShader() -- reset
         end
 
         love.graphics.setColor(1, 1, 1, 1)
@@ -246,12 +248,13 @@ return {
             end
         end
         dialog:draw()
+        
         love.graphics.setCanvas()
         love.graphics.setShader(shaders.mapper)
-        shaders.mapper:send("amount", .3)
+        shaders.mapper:send("amount", 0.4)
         shaders.mapper:sendColor("dark", self.darkcolor)
         shaders.mapper:sendColor("light", self.lightcolor)
-        love.graphics.draw(self.mainCanvas, 0, 0, 0, _GAMESCALE)
+        love.graphics.draw(self.mainCanvas, 0, 0, 0, _GAMESCALE) -- Render canvas with cool gradient mapping
 
         love.graphics.setShader()
     end
