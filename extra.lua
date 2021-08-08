@@ -122,4 +122,12 @@ function utils.gotHere()
     print(lineinfo)
 end
 
+function utils.near(grid, object)
+    local left  = grid[utils.vec2Union(object.x-1, object.y)]
+    local right = grid[utils.vec2Union(object.x+1, object.y)]
+    local up    = grid[utils.vec2Union(object.x, object.y-1)]
+    local down  = grid[utils.vec2Union(object.x, object.y+1)]
+    return (left or right or up or down), left, right, up, down
+end
+
 return utils

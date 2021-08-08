@@ -27,7 +27,8 @@ return {
             actors = {},
             tiles = {},
             grids = {
-                collision = {}
+                collision = {},
+                player = {}
             }
         }
 

@@ -33,7 +33,8 @@ return {
                         else
                             local price = tostring(v.price)
                             if #price==1 then price = price .. " " end
-                            table.insert(options, "$"..price.." "..v.name)
+                            local h = (v.price>money) and "*" or ""
+                            table.insert(options, h.."$"..price..h.." "..v.name)
                         end
                     end
                     local r = npc:say("Select what you want!", options, true)

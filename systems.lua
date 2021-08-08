@@ -19,9 +19,9 @@ local scripting = {
 return {
     [998] = function(actor, delta, chunk, world) -- DEBUG SCRIPTING TEST
         local AWAIT, NEXT, DIALOG, MOVEMENT = 0, 1, 2, 3
-        
+
         if (not actor._scr_script) and actor._scr_scriptset then
-            if input:isDown("DEBUGBUTTON_01") then 
+            if ex.near(chunk.grids.player, actor) and input:isDown("DEBUGBUTTON_01") then 
                 actor._scr_script = coroutine.create(actor._scr_scriptset.playerInteraction) 
             end
             actor._src_state = NEXT
@@ -53,6 +53,7 @@ return {
         local cols = chunk.grids.collision
 
         if dialog.ready and not actor._moving then
+            local _pos = ex.vec2Union(actor.x, actor.y)
             local _y = actor.y
             if input:isDown("up") then
                 _y = actor.y - 1
@@ -73,6 +74,11 @@ return {
             end
             if not cols[ex.vec2Union(_x, actor.y)] then
                 actor.x = _x
+            end
+
+            if _pos~=ex.vec2Union(actor.y, actor.y) then
+                chunk.grids.player[_pos] = false
+                chunk.grids.player[ex.vec2Union(actor.x, actor.y)] = actor
             end
         end
 
