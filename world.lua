@@ -247,6 +247,11 @@ return {
                 love.graphics.rectangle("fill", math.floor(_x * _TILEWIDTH), math.floor(_y * _TILEHEIGHT), _TILEWIDTH, _TILEHEIGHT) 
             end
         end
+        love.graphics.setColor(extra.hex("000000")) -- Also a cool chunk count thing :)
+        extra.mainFont:print("FPS: *"..love.timer.getFPS(), 1, 9, nil, {0, .4, 1, 1})
+
+        love.graphics.setColor(1, 1, 1, 1)
+
         dialog:draw()
         
         love.graphics.setCanvas()
