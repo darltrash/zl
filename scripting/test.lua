@@ -9,13 +9,15 @@ local menu = {
 
 local money = 99
 local loop = 0
+local easter
 
 return {
     playerInteraction = function(npc)
         repeat
-            local _r = npc:say("Welcome to darltrashs\ninvisible funking meme\nsweatshop bullshit!", {
+            local _r = npc:say("Welcome to *darltrash's\nsweatshop*!", {
                 "I wanna buy",
                 "I wanna talk",
+                easter or "*ENABLE SUPERTRIP",
                 "I wanna quit"
             }, true)
 
@@ -24,12 +26,12 @@ return {
                     local moneystr = "$"..tostring(money)..""
 
                     local options = {
-                        "*< Back" .. (" "):rep(12-#moneystr) .. moneystr,
+                        "*< Back " .. ("-"):rep(10-#moneystr) .. " " .. moneystr,
                     }
                     
                     for _, v in ipairs(menu) do
                         if v.soldOut then
-                            table.insert(options, "*SOLD OUT ))))))))))")
+                            table.insert(options, "*SOLD OUT /////////")
                         else
                             local price = tostring(v.price)
                             if #price==1 then price = price .. " " end
@@ -42,7 +44,7 @@ return {
                         if menu[r-1].soldOut then
                             npc:say("Sorry, *thats not available...*")
                         elseif menu[r-1].price > money then
-                            npc:say("Sorry, I dont think you have\nenough money, Maybe come back\nwhen you're a little...\n\n*richer...")
+                            npc:say("Sorry, I don't think you have\nenough money, Maybe come back\nwhen you're a little, mmm...\n\n*...richer")
                         else
                             if npc:say("Are you sure you want to\nbuy it?", {"Absolutely", "Nooope"}, true)==1 then
                                 money = money - menu[r-1].price
@@ -53,20 +55,30 @@ return {
                     end
                 until r == 1
             elseif _r==2 then
-                npc:say("Hello! Im *darltrash*!\n(also known as *neil wolfkid*)\n\nI like making games and this is\nmy latest little experiment ;)")
-                npc:say("Im currently working on an rpg\nmade with *love2d* which is\nperformant and nice;\n\n*this is a demo of it")
+                npc:say("Hello! I'm *darltrash*!\n(also known as *neil wolfkid*)\n\nI like making games and this is\nmy latest little experiment ;)")
+                npc:say("I'm currently working on an rpg\nmade with *love2d* which is\nperformant and nice;\n\n*this is a demo of it")
                 npc:say("As I can see, You have pressed\nthe *SPECIAL DEBUG BUTTON* so you\nmay know me already lol")
                 npc:say("And as you know me,\nyou know im so lazy that i\nwill not write extra dialog and\njust loop it")
                 if loop>0 then 
                     npc:say("\n\n*(told ya....)*")
                     if loop>1 then
-                        npc:say("\n\n*((dont insist.))*")
+                        npc:say("\n\n*((don't insist.))*")
                     end
                 end
                 loop = loop +1
+            elseif _r==3 then
+                if easter then 
+                    npc:say("told ya.")
+                else
+                    if npc:say("Are you entirely sure you want\nto enable the *SUPERTRIP MODE*?\n\n*(you wont be able to disable it)", {"yes", "no"})==1 then
+                        require("world").cosmic = true
+                        easter = "*I TOLD YA"
+                    end
+                end
             else
                 npc:say("Gooooooodbyeeeee")
+                break
             end
-        until _r==3
+        until false
     end
 }

@@ -30,7 +30,7 @@ return {
         if input:isDown("cancel") then
             self.currchar = self.currchar + delta * self.velocity * 2
         end
-        self.ready = (self.currchar > #self.currText) and input:isDown("accept")
+        self.ready = (self.currchar > #self.currText) and input:justDown("accept")
 
         local minus = "left"
         local more = "right"

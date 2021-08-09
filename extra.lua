@@ -71,7 +71,7 @@ utils.font = setmetatable({
     end
 }, { __call = function(self, ...) return self:init(...) end })
 
-utils.mainFont = utils.font("assets/font.png", "ABCDEFGHIJKLMN_OPQRSTUVWXYZabcdefghijklmn_opqrstuvwxyz0123456789!?.,:;><$()")
+utils.mainFont = utils.font("assets/font.png", "ABCDEFGHIJKLMN_OPQRSTUVWXYZabcdefghijklmn_opqrstuvwxyz0123456789!?.,:;><$()[]/\\-+*__='\"")
 
 function utils.lerp(a, b, t) 
     return a * (1-t) + b * t 
@@ -93,6 +93,21 @@ end
 
 function utils.luma(r, g, b)
     return ((0.2126*r*255) + (0.7152*g*255) + (0.0722*b*255))/255
+end
+
+function utils.hsla(h, s, l, a)
+    if s == 0 then return l, l, l end
+    local function to(p, q, t)
+        if t < 0 then t = t + 1 end
+        if t > 1 then t = t - 1 end
+        if t < .16667 then return p + (q - p) * 6 * t end
+        if t < .5 then return q end
+        if t < .66667 then return p + (q - p) * (.66667 - t) * 6 end
+        return p
+    end
+    local q = l < .5 and l * (1 + s) or l + s - l * s
+    local p = 2 * l - q
+    return to(p, q, h + .33334), to(p, q, h), to(p, q, h - .33334), a or 1
 end
 
 function utils.convertBin(n) -- https://stackoverflow.com/questions/9079853/lua-print-integer-as-a-binary/9080080

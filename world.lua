@@ -148,6 +148,11 @@ return {
 
     process = function(self, delta)
         self.timer = self.timer + delta
+
+        if self.cosmic then
+            self.lightcolor = {extra.hsla(((self.timer*10)%100)/100, 1, 0.5)}
+            self.darkcolor = {extra.hsla((((self.timer*10)+20)%100)/100, 1, 0.1)}
+        end
         if not self.curChunk then
             -- We'll assume this is a new world
             local chunk = self:generateChunk(0)
